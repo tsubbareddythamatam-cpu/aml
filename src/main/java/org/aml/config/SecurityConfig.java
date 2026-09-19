@@ -51,7 +51,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 AMLConstants.AUTH_API)
                         .permitAll()
-                        .requestMatchers("/api/registraion/bulk").permitAll()
                         .requestMatchers(
                                 AMLConstants.ADMIN_API)
                         .hasRole(AMLConstants.ADMIN)

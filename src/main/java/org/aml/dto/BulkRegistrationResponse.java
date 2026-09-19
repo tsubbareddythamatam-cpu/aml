@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.aml.exception.ErrorResponse;
 
 import java.util.List;
 
@@ -17,4 +18,5 @@ public class BulkRegistrationResponse {
     private int successRecords;
     private int failedRecords;
     private List<String> failedEmails;
+    private List<ErrorResponse> errors;
 }
