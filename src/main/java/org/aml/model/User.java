@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Table(name = "users")
-@EntityListeners(AuditingEntityListener.class) // 1. Enables framework-level auditing tracking hooks
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
@@ -40,11 +40,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @CreatedDate // 2. Automatically populates when the record is created
+    @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate // 3. Automatically populates whenever the record is updated
+    @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -52,8 +52,4 @@ public class User {
 
     private LocalDateTime resetTokenExpiry;
 
-    // 🆕 Link to the new CompanyDetail table structure
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_detail_id", referencedColumnName = "id")
-    private CompanyDetail companyDetail;
 }

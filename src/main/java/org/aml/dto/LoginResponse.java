@@ -18,7 +18,4 @@ public class LoginResponse {
     private String phoneNumber;
     private String role;
     private String token;
-
-    // 🆕 Expose full corporate metadata structure matching UserResponse layout
-    private CompanyDetailDto companyDetail;
 }

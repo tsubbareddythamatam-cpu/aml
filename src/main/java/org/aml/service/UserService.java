@@ -2,7 +2,6 @@ package org.aml.service;
 
 import lombok.RequiredArgsConstructor;
 import org.aml.dto.*;
-import org.aml.model.CompanyDetail;
 import org.aml.model.Role;
 import org.aml.model.User;
 import org.aml.exception.ErrorResponse;
@@ -20,10 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -99,7 +95,7 @@ public class UserService {
     }
 
     /**
-     * Maps a user entity and available company information to a response DTO.
+     * Maps a user entity to a response DTO.
      *
      * @param user user entity to map
      * @return response DTO, or {@code null} when the entity is null
@@ -119,29 +115,11 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt());
 
-        // 🆕 Safely extract the nested corporate properties if they exist in the DB record
-        if (user.getCompanyDetail() != null) {
-            org.aml.model.CompanyDetail cd = user.getCompanyDetail();
-
-            CompanyDetailDto companyDto = CompanyDetailDto.builder()
-                    .companyName(cd.getCompanyName())
-                    .dateOfIncorporation(cd.getDateOfIncorporation())
-                    .countryOfOperation(cd.getCountryOfOperation())
-                    .countryOfDomicile(cd.getCountryOfDomicile())
-                    .registrationNo(cd.getRegistrationNo())
-                    .registrationNoExpiryDate(cd.getRegistrationNoExpiryDate())
-                    .product(cd.getProduct())
-                    .industry(cd.getIndustry())
-                    .build();
-
-            responseBuilder.companyDetail(companyDto);
-        }
-
         return responseBuilder.build();
     }
 
     /**
-     * Imports users and company details from the first worksheet of an uploaded workbook.
+     * Imports users from the first worksheet of an uploaded workbook.
      *
      * @param file workbook containing user records
      * @return counts and details of successfully and unsuccessfully processed rows
@@ -157,8 +135,6 @@ public class UserService {
         int totalRecords = 0;
         int successRecords = 0;
         int failedRecords = 0;
-
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
 
@@ -176,13 +152,6 @@ public class UserService {
                 try {
                     // 1. Dynamic Extraction Layer: Pulls value if it exists, otherwise sets explicitly to null
                     String companyName = getCleanValue(row.getCell(0));
-                    String dateOfIncStr = getCleanValue(row.getCell(1));
-                    String countryOfOperation = getCleanValue(row.getCell(2));
-                    String countryOfDomicile = getCleanValue(row.getCell(3));
-                    String registrationNo = getCleanValue(row.getCell(4));
-                    String expiryDateStr = getCleanValue(row.getCell(5));
-                    String product = getCleanValue(row.getCell(6));
-                    String industry = getCleanValue(row.getCell(7));
                     email = getCleanValue(row.getCell(8));
 
                     // Optional: Check if your Excel template expands to include columns 9, 10, and 11
@@ -215,37 +184,18 @@ public class UserService {
                         continue;
                     }
 
-                    // 3. Date Formatting Handlers (turns invalid/blank strings into safe null parameters)
-                    LocalDate dateOfIncorporation = null;
-                    if (dateOfIncStr != null) {
-                        try {
-                            dateOfIncorporation = LocalDate.parse(dateOfIncStr, dateFormatter);
-                        } catch (DateTimeParseException e) {
-                            logger.warn("Row {} format warning: Invalid date format '{}' for incorporation", i + 1, dateOfIncStr);
-                        }
-                    }
-
-                    LocalDate registrationNoExpiryDate = null;
-                    if (expiryDateStr != null) {
-                        try {
-                            registrationNoExpiryDate = LocalDate.parse(expiryDateStr, dateFormatter);
-                        } catch (DateTimeParseException e) {
-                            logger.warn("Row {} format warning: Invalid date format '{}' for expiry", i + 1, expiryDateStr);
-                        }
-                    }
-
-                    // 4. Fallback Logic: If firstName isn't in Excel, dynamically isolate first word from company name
+                    // 3. Fallback Logic: If firstName isn't in Excel, dynamically isolate first word from company name
                     if (firstName == null && companyName != null) {
                         firstName = companyName.contains(" ") ? companyName.split(" ")[0] : companyName;
                     }
 
-                    // 5. Encrypt Password only if it was actually provided in the sheet row configuration
+                    // 4. Encrypt Password only if it was actually provided in the sheet row configuration
                     String encodedPassword = null;
                     if (rawPassword != null) {
                         encodedPassword = passwordEncoder.encode(rawPassword);
                     }
 
-                    // 6. Role Processing
+                    // 5. Role Processing
                     Role targetRole = Role.USER;
                     if (roleStr != null && !roleStr.isBlank()) {
                         String normalizedRole = roleStr.trim().toUpperCase();
@@ -255,22 +205,10 @@ public class UserService {
                         }
                     }
 
-                    // 7. Initialize Sub-Entity Data Layout
-                    CompanyDetail companyDetail = CompanyDetail.builder()
-                            .companyName(companyName)
-                            .dateOfIncorporation(dateOfIncorporation)
-                            .countryOfOperation(countryOfOperation)
-                            .countryOfDomicile(countryOfDomicile)
-                            .registrationNo(registrationNo)
-                            .registrationNoExpiryDate(registrationNoExpiryDate)
-                            .product(product)
-                            .industry(industry)
-                            .build();
-
-                    // 8. Build Base Master User Model Structure
+                    // 6. Build Base User Model
                     User user = User.builder()
                             .email(email)
-                            .companyDetail(companyDetail)
+                            .companyName(companyName)
                             .firstName(firstName)      // Parsed from sheet, fallback to split company name, or null
                             .lastName(lastName)        // Extracted cleanly from sheet column index, or true null
                             .password(encodedPassword) // Encoded string if provided, or clean null
@@ -279,7 +217,6 @@ public class UserService {
                             .updatedAt(LocalDateTime.now())
                             .build();
 
-                    companyDetail.setUser(user);
                     users.add(user);
                     successRecords++;
 
@@ -357,7 +294,7 @@ public class UserService {
     }
 
     /**
-     * Updates supplied user and company fields while retaining unspecified values.
+     * Updates supplied user fields while retaining unspecified values.
      *
      * @param id user identifier
      * @param request fields to update
@@ -391,28 +328,7 @@ public class UserService {
         }
         user.setUpdatedAt(LocalDateTime.now());
 
-        // 3. Dynamically update or link CompanyDetail sub-entity properties
-        if (request.getCompanyDetail() != null) {
-            CompanyUpdateDto cuDto = request.getCompanyDetail();
-
-            // Lazy initialization: Create company profile block if it didn't exist before
-            if (user.getCompanyDetail() == null) {
-                user.setCompanyDetail(new CompanyDetail());
-                user.getCompanyDetail().setUser(user);
-            }
-
-            CompanyDetail cd = user.getCompanyDetail();
-            if (cuDto.getCompanyName() != null) cd.setCompanyName(cuDto.getCompanyName().trim());
-            if (cuDto.getDateOfIncorporation() != null) cd.setDateOfIncorporation(cuDto.getDateOfIncorporation());
-            if (cuDto.getCountryOfOperation() != null) cd.setCountryOfOperation(cuDto.getCountryOfOperation().trim());
-            if (cuDto.getCountryOfDomicile() != null) cd.setCountryOfDomicile(cuDto.getCountryOfDomicile().trim());
-            if (cuDto.getRegistrationNo() != null) cd.setRegistrationNo(cuDto.getRegistrationNo().trim());
-            if (cuDto.getRegistrationNoExpiryDate() != null) cd.setRegistrationNoExpiryDate(cuDto.getRegistrationNoExpiryDate());
-            if (cuDto.getProduct() != null) cd.setProduct(cuDto.getProduct().trim());
-            if (cuDto.getIndustry() != null) cd.setIndustry(cuDto.getIndustry().trim());
-        }
-
-        // 4. Save and map back to response. CascadeType.ALL handles the child updates automatically!
+        // 3. Save and map back to response.
         User updatedUser = userRepository.save(user);
         logger.info("✅ Successfully persisted updated account metadata logs for User ID: {}", id);
 

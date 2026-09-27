@@ -3,20 +3,6 @@ CREATE DATABASE IF NOT EXISTS aml
     COLLATE utf8mb4_unicode_ci;
 USE aml;
 
-CREATE TABLE IF NOT EXISTS company_details (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    company_name VARCHAR(255),
-    date_of_incorporation DATE,
-    country_of_operation VARCHAR(255),
-    country_of_domicile VARCHAR(255),
-    registration_no VARCHAR(255),
-    registration_no_expiry_date DATE,
-    product VARCHAR(255),
-    industry VARCHAR(255),
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_company_details_registration_no (registration_no)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT NOT NULL AUTO_INCREMENT,
     first_name VARCHAR(255),
@@ -31,12 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME(6) NOT NULL,
     reset_token VARCHAR(255),
     reset_token_expiry DATETIME(6),
-    company_detail_id BIGINT,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_users_email (email),
-    UNIQUE KEY uq_users_company_detail (company_detail_id),
-    CONSTRAINT fk_users_company_detail
-        FOREIGN KEY (company_detail_id) REFERENCES company_details (id)
+    UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS customer_information (
