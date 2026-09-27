@@ -175,7 +175,7 @@ public class UserController {
         }
     }
     /**
-     * Updates a user profile and any supplied company details.
+     * Updates a user profile.
      *
      * @param id user identifier
      * @param request fields to update

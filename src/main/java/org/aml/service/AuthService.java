@@ -2,11 +2,9 @@ package org.aml.service;
 
 import lombok.RequiredArgsConstructor;
 import org.aml.constants.AMLConstants;
-import org.aml.dto.CompanyDetailDto;
 import org.aml.dto.LoginRequest;
 import org.aml.dto.LoginResponse;
 import org.aml.dto.RegisterRequest;
-import org.aml.model.CompanyDetail;
 import org.aml.model.Role;
 import org.aml.model.User;
 import org.aml.exception.InvalidCredentialsException;
@@ -39,7 +37,7 @@ public class AuthService {
     private final EmailService emailService;
 
     /**
-     * Registers a user, stores company details, and sends the initial password setup link.
+     * Registers a user and sends the initial password setup link.
      *
      * @param request registration details
      * @return confirmation that the setup link was emailed
@@ -73,35 +71,19 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         LocalDateTime expiryTime = LocalDateTime.now().plusHours(24);
 
-        // 🆕 1. Build the CompanyDetail sub-entity instance using the request parameters
-        CompanyDetail companyDetail = CompanyDetail.builder()
-                .companyName(request.getCompanyName())
-                .dateOfIncorporation(request.getDateOfIncorporation()) // Extracted from expanded RegisterRequest
-                .countryOfOperation(request.getCountryOfOperation())
-                .countryOfDomicile(request.getCountryOfDomicile())
-                .registrationNo(request.getRegistrationNo())
-                .registrationNoExpiryDate(request.getRegistrationNoExpiryDate())
-                .product(request.getProduct())
-                .industry(request.getIndustry())
-                .build();
-
-        // 🆕 2. Attach the mapped sub-entity block directly to the parent User builder structure
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
-                .companyDetail(companyDetail) // Linked mapping setup
+                .companyName(request.getCompanyName())
                 .role(targetRole)
                 .resetToken(token)
                 .resetTokenExpiry(expiryTime)
                 .build();
 
-        // Optional: Establish bidirectional entity sync reference if needed by your JPA configuration rules
-        companyDetail.setUser(user);
-
         userRepository.save(user);
-        logger.info("Successfully persisted new user and company metadata");
+        logger.info("Successfully persisted new user");
 
         emailService.mailSend(
                 request.getFirstName(),
@@ -152,8 +134,6 @@ public class AuthService {
         String token = jwtService.generateToken(user);
         logger.info("JWT session token successfully generated");
 
-        // 🆕 3. Safely resolve corporate metadata properties out of the embedded child object layer
-        // 1. Initialize the base authentication login payload response
         LoginResponse.LoginResponseBuilder loginResponseBuilder = LoginResponse.builder()
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
@@ -161,24 +141,6 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole() != null ? user.getRole().name() : Role.USER.name())
                 .token(token);
-
-        // 2. 🆕 Safely convert and map the full child table profile details if present in the database record
-        if (user.getCompanyDetail() != null) {
-            org.aml.model.CompanyDetail cd = user.getCompanyDetail();
-
-            CompanyDetailDto companyDto = CompanyDetailDto.builder()
-                    .companyName(cd.getCompanyName())
-                    .dateOfIncorporation(cd.getDateOfIncorporation())
-                    .countryOfOperation(cd.getCountryOfOperation())
-                    .countryOfDomicile(cd.getCountryOfDomicile())
-                    .registrationNo(cd.getRegistrationNo())
-                    .registrationNoExpiryDate(cd.getRegistrationNoExpiryDate())
-                    .product(cd.getProduct())
-                    .industry(cd.getIndustry())
-                    .build();
-
-            loginResponseBuilder.companyDetail(companyDto);
-        }
 
         return loginResponseBuilder.build();
 

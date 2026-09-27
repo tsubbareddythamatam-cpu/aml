@@ -15,7 +15,4 @@ public class UpdateUserRequest {
     private String phoneNumber;
     private String  role;
 
-    private CompanyUpdateDto companyDetail;
-
-
 }
