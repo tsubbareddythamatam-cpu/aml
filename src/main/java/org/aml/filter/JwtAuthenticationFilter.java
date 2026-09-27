@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.aml.constants.AMLConstants;
 import org.aml.service.CustomUserDetailsService;
 import org.aml.service.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,9 +23,20 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
+    /**
+     * Authenticates requests containing a valid bearer JWT and continues the filter chain.
+     *
+     * @param request current HTTP request
+     * @param response current HTTP response
+     * @param filterChain remaining servlet filters
+     * @throws ServletException if request filtering fails
+     * @throws IOException if request or response I/O fails
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -84,6 +97,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception ex) {
+            logger.warn("Rejected request with an invalid or expired JWT");
 
             response.setStatus(
                     HttpServletResponse.SC_UNAUTHORIZED);

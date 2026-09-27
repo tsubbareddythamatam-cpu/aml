@@ -5,20 +5,25 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.aml.model.Role;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL) // 👈 Automatically hides any field or detail if it is null
-public class LoginResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class UserResponse {
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
     private String phoneNumber;
-    private String role;
-    private String token;
+    private Role role;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    // 🆕 Expose full corporate metadata structure matching UserResponse layout
     private CompanyDetailDto companyDetail;
+
 }

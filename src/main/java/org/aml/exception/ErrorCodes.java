@@ -13,6 +13,9 @@ public class ErrorCodes {
 
     public static final String INTERNAL_SERVER_ERROR =  AMLConstants.INTERNAL_SERVER_ERROR_CODE;
 
+    /**
+     * Prevents instantiation of this constants holder.
+     */
     private ErrorCodes() {
     }
 }

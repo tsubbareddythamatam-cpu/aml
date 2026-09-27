@@ -2,6 +2,9 @@ package org.aml.constants;
 
 public final class AMLConstants {
 
+    /**
+     * Prevents instantiation of this constants holder.
+     */
     private AMLConstants() {
         throw new IllegalStateException("Utility class");
     }
@@ -85,13 +88,22 @@ public final class AMLConstants {
     public static final String USER = "USER";
     public static final String REQUEST_PATH = "/api/auth";
 
-    public static final String REGISTRATION_PATH = "/api/registraion";
+    public static final String USER_PATH = "/api/users";
 
     public static final String REGISTER = "/register";
 
     public static final String LOGIN= "/login";
 
+    public static final String FORGOT_PASSWORD= "/forgot-password";
+
+    public static final String RESET_PASSWORD ="/reset-password";
+    public static final String SET_PASSWORD = "/set-password";
+
+    public static final String BULK_REGISTRATION = "/bulk";
+
     public static  final String USER_DERAILS_CANNOT_BE_NULL = "User details cannot be null";
+
+    public static final String EMAIL_SUCCESS_MSG =" Welcome! Your registration was successful";
 
 
 }

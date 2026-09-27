@@ -1,0 +1,9 @@
+${AnsiColor.BRIGHT_GREEN}    _    __  __ _          _                _ _             _   _
+${AnsiColor.BRIGHT_GREEN}   / \  |  \/  | |        / \   _ __  _ __ | (_) ___  __ _ | |_(_) ___  _ __
+${AnsiColor.BRIGHT_GREEN}  / _ \ | |\/| | |       / _ \ | '_ \| '_ \| | |/ __|/ _` || __| |/ _ \| '_ \
+${AnsiColor.BRIGHT_GREEN} / ___ \| |  | | |___   / ___ \| |_) | |_) | | | (__| (_| || |_| | (_) | | | |
+${AnsiColor.BRIGHT_GREEN}/_/   \_\_|  |_|_____| /_/   \_\ .__/| .__/|_|_|\___|\__,_| \__|_|\___/|_| |_|
+${AnsiColor.BRIGHT_GREEN}                               |_|   |_|
+${AnsiColor.BRIGHT_WHITE}==============================================================================
+${AnsiColor.BRIGHT_BLUE}:: AML Application Service :: ${AnsiColor.BRIGHT_MAGENTA}(v${application.version})
+${AnsiColor.DEFAULT}
